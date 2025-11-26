@@ -84,40 +84,41 @@ jobs:
           echo "Cobertura: 95%"
 
 
-  deploy:
-    name: Deploy para Railway (Cloud)
-    runs-on: ubuntu-latest
-    needs: test
-    if: success()
+deploy:
+  name: Deploy para Railway (Cloud)
+  runs-on: ubuntu-latest
+  needs: test
+  if: success()
 
-    steps:
-      - name: Checkout do codigo
-        uses: actions/checkout@v4
+  steps:
+    - name: Checkout do código
+      uses: actions/checkout@v4
 
-      - name: Instalar Railway CLI
-        run: |
-          npm install -g @railway/cli
-          echo "Railway CLI instalado."
+    - name: Instalar Railway CLI
+      run: |
+        npm install -g @railway/cli
+        echo "Railway CLI instalado."
 
-      - name: Autenticar no Railway
-        run: echo "Autenticando no Railway..."
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+    - name: Autenticar no Railway
+      run: echo "Autenticando no Railway..."
+      env:
+        RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
-      - name: Realizar deploy
-        run: |
-          echo "Iniciando deploy..."
-          npx @railway/cli up
-          echo "Deploy realizado com sucesso!"
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+    - name: Realizar deploy
+      run: |
+        echo "Iniciando deploy..."
+        npx railway up --project 9cb80052-a5b4-443d-8e79-981fd17cc0e1 --service lab_api
+        echo "Deploy realizado com sucesso!"
+      env:
+        RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
-      - name: Verificar saude da aplicacao
-        run: |
-          echo "Aguardando aplicacao..."
-          sleep 30
-          echo "Aplicacao online!"
+    - name: Verificar saude da aplicacao
+      run: |
+        echo "Aguardando aplicacao..."
+        sleep 30
+        echo "Aplicação online!"
 
-      - name: Finalizacao
-        run: |
-          echo "Pipeline concluida com sucesso."
+    - name: Finalizacão
+      run: |
+        echo "Pipeline concluida com sucesso."
+
