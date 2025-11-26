@@ -17,28 +17,27 @@ jobs:
       - name: Checkout do codigo
         uses: actions/checkout@v4
 
-      - name: Configurar Python 3.9
+      - name: Configurar Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: "3.9"
 
       - name: Instalar dependencias
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          echo "Dependencias instaladas com sucesso!"
+          echo "Dependencias instaladas"
 
-      - name: Verificar estrutura do projeto
+      - name: Verificar estrutura
         run: |
           ls -la
-          echo "Estrutura verificada."
+          echo "Estrutura ok"
 
       - name: Build da imagem Docker
         run: |
           docker build -t lab-api:${{ github.sha }} .
           docker tag lab-api:${{ github.sha }} lab-api:latest
-          echo "Imagem Docker criada com sucesso."
-
+          echo "Docker build ok"
 
   test:
     name: Testes Unitarios
@@ -49,76 +48,44 @@ jobs:
       - name: Checkout do codigo
         uses: actions/checkout@v4
 
-      - name: Configurar Python 3.9
+      - name: Configurar Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: "3.9"
 
       - name: Instalar dependencias
         run: |
           pip install -r requirements.txt
 
-      - name: Executar testes unitarios
-        id: run_tests
+      - name: Executar testes
         run: |
-          echo "Executando testes unitarios..."
           python -m unittest discover -v
-          TEST_RESULT=$?
-          if [ $TEST_RESULT -eq 0 ]; then
-            echo "test_passed=true" >> $GITHUB_OUTPUT
-            echo "Todos os testes passaram."
-          else
-            echo "test_passed=false" >> $GITHUB_OUTPUT
-            echo "Testes falharam."
-            exit 1
-          fi
 
-      # - name: Teste intencional de falha (desativado)
-      #   run: |
-      #     exit 1
-      #     echo "Teste de falha ativado. Pipeline interrompida."
+  deploy:
+    name: Deploy para Railway
+    runs-on: ubuntu-latest
+    needs: test
+    if: success()
 
-      - name: Gerar relatorio de cobertura
-        if: success()
+    steps:
+      - name: Checkout do codigo
+        uses: actions/checkout@v4
+
+      - name: Instalar Railway CLI
         run: |
-          echo "Cobertura: 95%"
+          npm install -g @railway/cli
+          echo "Railway CLI instalada"
 
+      - name: Configurar token
+        run: echo "Token carregado"
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
-deploy:
-  name: Deploy para Railway (Cloud)
-  runs-on: ubuntu-latest
-  needs: test
-  if: success()
+      - name: Executar deploy
+        run: |
+          railway up --project 9cb80052-a5b4-443d-8e79-981fd17cc0e1 --service lab_api
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
-  steps:
-    - name: Checkout do código
-      uses: actions/checkout@v4
-
-    - name: Instalar Railway CLI
-      run: |
-        npm install -g @railway/cli
-        echo "Railway CLI instalado."
-
-    - name: Autenticar no Railway
-      run: echo "Autenticando no Railway..."
-      env:
-        RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-
-    - name: Realizar deploy
-      run: |
-        echo "Iniciando deploy..."
-        npx railway up --project 9cb80052-a5b4-443d-8e79-981fd17cc0e1 --service lab_api
-        echo "Deploy realizado com sucesso!"
-      env:
-        RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-
-    - name: Verificar saude da aplicacao
-      run: |
-        echo "Aguardando aplicacao..."
-        sleep 30
-        echo "Aplicação online!"
-
-    - name: Finalizacão
-      run: |
-        echo "Pipeline concluida com sucesso."
-
+      - name: Finalizacao
+        run: echo "Pipeline concluida com sucesso"
