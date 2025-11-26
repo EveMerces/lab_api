@@ -71,8 +71,8 @@ jobs:
             exit 1
           fi
       
-      - name: Teste intencional de falha (comentar para passar)
-        run: |
+      #- name: Teste intencional de falha (comentar para passar)
+      # run: |
           exit 1
           echo "⚠️ Teste de falha ATIVADO. Pipeline NÃO prosseguirá."
       
